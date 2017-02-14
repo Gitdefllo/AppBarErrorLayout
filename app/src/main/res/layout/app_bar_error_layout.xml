@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.app.errorlayout.AppBarErrorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/app_bar_layout"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/app_bar_height"
+    android:theme="@style/AppTheme.AppBarOverlay">
+    <!-- no "android:fitsSystemWindows" -->
+
+    <android.support.design.widget.CollapsingToolbarLayout
+        android:id="@+id/toolbar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        app:contentScrim="?attr/colorPrimary"
+        app:layout_scrollFlags="scroll|exitUntilCollapsed">
+        <!-- do not forget "android:fitsSystemWindows" -->
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar_widget"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:layout_collapseMode="pin"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            android:background="@android:color/background_dark"/>
+
+        <!-- custom error layout -->
+        <include layout="@layout/include_error_toolbar"/>
+
+    </android.support.design.widget.CollapsingToolbarLayout>
+
+</com.app.errorlayout.AppBarErrorLayout>
