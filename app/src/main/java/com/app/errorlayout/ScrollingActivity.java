@@ -43,18 +43,8 @@ public class ScrollingActivity extends AppCompatActivity {
         findViews();
         setEvents();
 
-        // we need to get the height of the toolbar so we need
-        // a thread to wait until the UI is displayed
-        appbar.post(new Runnable() {
-            @Override
-            public void run() {
-                // setting the error elements
-                appbar.initErrorViews(
-                        toolbar,
-                        toolbarError
-                );
-            }
-        });
+        // setting the error elements
+        appbar.initErrorViews(toolbar, toolbarError);
     }
 
     private void setEvents() {

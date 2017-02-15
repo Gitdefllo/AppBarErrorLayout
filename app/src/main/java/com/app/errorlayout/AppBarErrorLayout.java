@@ -13,12 +13,15 @@ import android.widget.RelativeLayout;
 @SuppressWarnings("unused")
 public class AppBarErrorLayout extends AppBarLayout {
 
-    private Toolbar toolbar;
-    private RelativeLayout toolbarError; // error layout container
+    private Toolbar tlb; // usual toolbar
+    private RelativeLayout tlberr; // error layout container
 
-    private boolean isErrorVisible = false; // save the collapse/expand state
     private static int APPBAR_START_HEIGHT; // save the initial height of AppBarLayout
     private static int TOOLBAR_START_HEIGHT; // save the initial height of Toolbar
+    private static int ERRORLAYOUT_MIN_HEIGHT; // get the minimum height of ErrorLayout
+
+    private final static int DURATION = 300; // duration for expand/collapse animation
+    private boolean isErrorVisible = false; // save the collapse/expand state
 
     public AppBarErrorLayout(Context context) {
         super(context);
@@ -32,77 +35,92 @@ public class AppBarErrorLayout extends AppBarLayout {
         return this.isErrorVisible;
     }
 
-    // set the initial height, which will be used to retrieve the inital state
+    // set the initial heights, which will be used to retrieve the inital states
     private void setMinimumHeight() {
         APPBAR_START_HEIGHT = this.getHeight(); // appbar's height
-        TOOLBAR_START_HEIGHT = toolbar.getLayoutParams().height; // toolbar
+        TOOLBAR_START_HEIGHT = tlb.getLayoutParams().height; // toolbar
+        ERRORLAYOUT_MIN_HEIGHT = ((ViewGroup)
+                this.getParent()).getHeight() - TOOLBAR_START_HEIGHT; // errorlayout
     }
 
     // initialize the vars and the heights
-    public void initErrorViews(Toolbar toolbar, RelativeLayout toolbarError) {
-        this.toolbar = toolbar;
-        this.toolbarError = toolbarError;
-        this.setMinimumHeight();
+    public void initErrorViews(final Toolbar toolbar,
+                               final RelativeLayout errorlayout) {
+        // we need to get the height of the toolbar so we need
+        // a thread to wait until the UI is displayed
+        this.post(new Runnable() {
+            @Override
+            public void run() {
+                tlb = toolbar;
+                tlberr = errorlayout;
+
+                setMinimumHeight();
+            }
+        });
     }
 
     // force to collapse the layout
     public void showErrorLayout() {
-        // get the window height to expand the error layout
-        final int parentHeight = ((ViewGroup) this.getParent()).getHeight();
-        // final target height to keep a small space at bottom (optional)
-        int targetHeight = parentHeight - TOOLBAR_START_HEIGHT;
-        // animate the height of error layout
-        animateAppbar(targetHeight, 3000, true);
+        // save the current visible state
+        this.isErrorVisible = true;
+        // expand appbar and toolbar
+        expandbar();
     }
 
     // force to expand the layout
     public void hideErrorLayout() {
+        // save the current visible state
+        this.isErrorVisible = false;
         // animate the height from current to the initial height
-        animateAppbar(APPBAR_START_HEIGHT, 3000, false);
+        collapsebar(this, APPBAR_START_HEIGHT);
+        collapsebar(tlb, TOOLBAR_START_HEIGHT);
     }
 
-    // target (int) = target height for expanding or collapsing to
-    // duration (int) = duration of the animation
-    // expanded (boolean) = for the listener to do specific things on
-    //                      collapse or expand effect
-    private void animateAppbar(final int target, int duration, final boolean expanded) {
+    // animate the appbar and toolbar height to expanded mode
+    private void expandbar() {
+        // set a animation from current height to target
+        ValueAnimator slideAnimator = ValueAnimator
+                .ofInt(this.getHeight(), ERRORLAYOUT_MIN_HEIGHT)
+                .setDuration(DURATION);
+
         // set local variable
         final AppBarErrorLayout thiz = this;
 
-        // save the current visible state
-        this.isErrorVisible = expanded;
+        // the animation expands the widgets
+        slideAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                int newHeight = (Integer) animation.getAnimatedValue();
 
+                thiz.getLayoutParams().height = newHeight;
+                thiz.requestLayout();
+
+                tlb.getLayoutParams().height = newHeight;
+                tlb.requestLayout();
+            }
+        });
+
+        // show the error layout
+        tlberr.setVisibility(View.VISIBLE);
+        slideAnimator.start();
+    }
+
+    // animate the appbar and toolbar height to collapsed mode
+    private void collapsebar(final View target, final int targetHeight) {
         // set a animation from current height to target
         ValueAnimator slideAnimator = ValueAnimator
-                .ofInt(this.getHeight(), target)
-                .setDuration(duration);
+                .ofInt(target.getHeight(), targetHeight)
+                .setDuration(DURATION);
 
         // set a listener on animation
         slideAnimator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animator) {
-                if (!expanded) {
-                    // if we collapse, remove the error layout
-                    toolbarError.setVisibility(View.GONE);
-                } else {
-                    // otherwise, show the error layout
-                    toolbarError.setVisibility(View.VISIBLE);
-                }
+                tlberr.setVisibility(View.GONE);
             }
 
             @Override
-            public void onAnimationEnd(Animator animator) {
-                if (!expanded) {
-                    // if we force the collapse, we reset the initial height
-                    // at the end of the animation
-                    thiz.getLayoutParams().height = APPBAR_START_HEIGHT;
-                    thiz.requestLayout();
-
-                    toolbar.getLayoutParams().height = TOOLBAR_START_HEIGHT;
-                    toolbar.requestLayout();
-                }
-            }
-
+            public void onAnimationEnd(Animator animator) { }
             @Override
             public void onAnimationCancel(Animator animator) { }
             @Override
@@ -113,13 +131,8 @@ public class AppBarErrorLayout extends AppBarLayout {
         slideAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                int newHeight = (Integer) animation.getAnimatedValue();
-
-                thiz.getLayoutParams().height = newHeight;
-                thiz.requestLayout();
-
-                toolbar.getLayoutParams().height = newHeight;
-                toolbar.requestLayout();
+                target.getLayoutParams().height = (Integer) animation.getAnimatedValue();
+                target.requestLayout();
             }
         });
 
