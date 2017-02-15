@@ -1,6 +1,5 @@
 package com.app.errorlayout;
 
-import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.support.design.widget.AppBarLayout;
@@ -105,29 +104,14 @@ public class AppBarErrorLayout extends AppBarLayout {
         slideAnimator.start();
     }
 
-    // animate the appbar and toolbar height to collapsed mode
+    // animate the widgets height to collapsed mode
     private void collapsebar(final View target, final int targetHeight) {
         // set a animation from current height to target
         ValueAnimator slideAnimator = ValueAnimator
                 .ofInt(target.getHeight(), targetHeight)
                 .setDuration(DURATION);
 
-        // set a listener on animation
-        slideAnimator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animator) {
-                tlberr.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animator) { }
-            @Override
-            public void onAnimationCancel(Animator animator) { }
-            @Override
-            public void onAnimationRepeat(Animator animator) { }
-        });
-
-        // the animation expands or collapses the widgets
+        // the animation collapses the widgets
         slideAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -136,6 +120,8 @@ public class AppBarErrorLayout extends AppBarLayout {
             }
         });
 
+        // hide the error layout
+        tlberr.setVisibility(View.GONE);
         slideAnimator.start();
     }
 }
